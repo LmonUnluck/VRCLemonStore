@@ -58,3 +58,19 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+
+*.meta
+
+Scenes/
+
+Gizmos/UdonSharp/UdonSharpProgramAsset icon.png
+
+SerializedUdonPrograms/
+
+Udon/
+
+UdonSharp/
+
+VRChat Examples/
+
+VRCSDK/
