@@ -11,7 +11,7 @@ using System.Net;
 using System;
 public class LmonStore : EditorWindow
 {
-    const string storeVersion = "v1.0";
+    const string storeVersion = "v1.1";
     static string[] scriptVersions;
 
     [MenuItem("Lmon/Store")]
