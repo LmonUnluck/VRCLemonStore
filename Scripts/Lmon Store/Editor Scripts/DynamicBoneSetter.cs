@@ -9,7 +9,7 @@ public class DynamicBoneSetter : EditorWindow
 
     Transform currentAvatar;
 
-    [MenuItem("Lmon/Dynamic Bone Fixer")]
+    [MenuItem("Lmon/Avatars/Dynamic Bone Fixer")]
     public static void ShowWindow()
     {
         EditorWindow window = GetWindow<DynamicBoneSetter>("Dynamic Bone Fixer");
