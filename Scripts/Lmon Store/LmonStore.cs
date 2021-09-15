@@ -9,22 +9,59 @@ using UnityEditor;
 using UnityEngine.Networking;
 using System.Net;
 using System;
+
+public enum StoreCategory
+{
+    Misc, Avatar, World
+}
+
 public class LmonStore : EditorWindow
 {
-    const string storeVersion = "v1.1";
+    const string storeVersion = "v1.2";
     static string[] scriptVersions;
+    //static List<LmonStoreObject> menuItems = new List<LmonStoreObject>();
+    static Dictionary<StoreCategory, List<LmonStoreObject>> menuItems = new Dictionary<StoreCategory, List<LmonStoreObject>>();
+    
 
     [MenuItem("Lmon/Store")]
     public static void ShowWindow()
     {
+        menuItems.Clear();
+        for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
+        {
+            menuItems.Add((StoreCategory)i, new List<LmonStoreObject>());
+        }
         EditorWindow window = GetWindow<LmonStore>("Lmon Store");
         window.maxSize = new Vector2(400, 395);
         window.minSize = window.maxSize;
 
         scriptVersions = GetLemonVersions();
+
+        SearchItems();
     }
 
+    static int totalItems = 0;
 
+    static void SearchItems()
+    {
+        totalItems = 0;
+        string[] scrObject = Directory.GetFiles(Application.dataPath + "/Scripts/Lmon Store/Menu Items", "*.asset");
+        for (int i = 0; i < scrObject.Length; i++)
+        {
+            try
+            {
+                string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\','/');
+                LmonStoreObject newObj = (LmonStoreObject)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreObject));
+                menuItems[newObj.category].Add(newObj);
+                totalItems++;
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Failed to load: " + (scrObject[i]) + "\n"+e.Message);
+            }
+
+        }
+    }
 
     string file;
 
@@ -35,6 +72,10 @@ public class LmonStore : EditorWindow
     UnityWebRequest webRequest;
     string loadPath = "";
     bool sdk = false;
+
+    int storeSelection = 0;
+
+    Vector2 viewPoint = Vector2.zero;
 
 
     const string sdk3World = "https://vrchat.com/download/sdk3-worlds";
@@ -72,6 +113,9 @@ public class LmonStore : EditorWindow
         Color defaultColor = GUI.backgroundColor;
         Rect displayBox = new Rect(r.x - 5, r.y - 5, r.width + 10, r.height + 10);
         GUI.backgroundColor = defaultColor * 0.75f;
+
+        
+
         GUI.Box(displayBox, "");
         GUI.backgroundColor = defaultColor;
         GUILayout.BeginArea(r);
@@ -80,7 +124,12 @@ public class LmonStore : EditorWindow
         if (currentStoreVersion != storeVersion)
         {
             EditorGUILayout.HelpBox(string.Format("Version Mismatch ({0}), download {1}", storeVersion, currentStoreVersion), MessageType.Warning);
-            yOffset += 50;
+            if (GUILayout.Button("Download Latest Version"))
+            {
+                downloading = true;
+                DownloadPackage("LmonStore");
+            }
+            yOffset += 60;
         }
 
         EditorGUI.BeginDisabledGroup(downloading);
@@ -129,79 +178,53 @@ public class LmonStore : EditorWindow
                 }
             }
         }
-        Texture materialTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Material Transfer.png");
+        yOffset += 40;
+
+        List<string> allCategories = new List<string>();
+
+        allCategories.Add("All");
+
+        for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
+        {
+            allCategories.Add(Enum.GetNames(typeof(StoreCategory))[i]);
+        }
+
+        storeSelection = EditorGUILayout.Popup(storeSelection, allCategories.ToArray());
+        yOffset += 20;
 
         int heightIndex = 0;
 
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), materialTexture);
-        if (GUI.Button(new Rect(40, 50 + (30 * heightIndex) + yOffset, r.width - 40, 25), "Download Material Transfer"))
+        if (storeSelection == 0)
         {
-            downloading = true;
-            DownloadPackage("MaterialTransfer");
-
-        }
-        heightIndex++;
-
-        //EditorGUI.BeginDisabledGroup(true);
-        //Texture prefabTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Prefab Transfer.png");
-        //
-        //GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), prefabTexture);
-        //if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25),"Download Prefab Transfer"))
-        //{
-        //    
-        //}
-        //EditorGUI.EndDisabledGroup();
-        //
-        //heightIndex++;
-
-        Texture avatarThumbnailTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Thumbnail Creator.png");
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), avatarThumbnailTexture);
-        if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Download Avatar Thumbnail Creator"))
-        {
-            downloading = true;
-            DownloadPackage("AvatarThumbnailCreator");
-        }
-        heightIndex++;
-
-        Texture dynmaicBoneTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Dynamic Bone Fixer.png");
-
-        bool disableDynFix = true;
-
-        string[] dynBone = AssetDatabase.FindAssets("DynamicBone");
-
-        if (dynBone.Length > 0)
-        {
-            for (int i = 0; i < dynBone.Length; i++)
+            Rect scrollRect = new Rect(displayBox.x, displayBox.y + yOffset, displayBox.width-15, displayBox.height - yOffset);
+            
+            viewPoint = GUI.BeginScrollView(scrollRect, viewPoint, new Rect(0, 0, scrollRect.width - 100, (30 * totalItems)), false, true,null, new GUIStyle(GUI.skin.verticalScrollbar));
+            for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
             {
-                if (AssetDatabase.GUIDToAssetPath(dynBone[i]) == "Assets/DynamicBone/Scripts/DynamicBone.cs")
+                List<LmonStoreObject> foundList = menuItems[(StoreCategory)i];
+                for (int x = 0; x < foundList.Count; x++)
                 {
-                    disableDynFix = false;
-                    break;
+                    if (DisplayLmonAsset(foundList[x], new Rect(0,0,scrollRect.width,scrollRect.height), 0, ref heightIndex,viewPoint))
+                    {
+                        downloading = true;
+                        DownloadPackage(foundList[x].AssetName);
+                    }
+                }
+            }
+        } else
+        {
+            List<LmonStoreObject> foundList = menuItems[(StoreCategory)storeSelection-1];
+            viewPoint = GUI.BeginScrollView(displayBox, viewPoint, new Rect(0, 0, displayBox.x, (30 * foundList.Count)),false,true);
+            for (int x = 0; x < foundList.Count; x++)
+            {
+                if (DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex,viewPoint))
+                {
+                    downloading = true;
+                    DownloadPackage(foundList[x].AssetName);
                 }
             }
         }
-
-        EditorGUI.BeginDisabledGroup(disableDynFix);
-
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), dynmaicBoneTexture);
-        if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Download Dynamic Bone Setter"))
-        {
-            downloading = true;
-            DownloadPackage("DynamicBoneSetter");
-        }
-        EditorGUI.EndDisabledGroup();
-        heightIndex++;
-        if (disableDynFix)
-        {
-            EditorGUI.HelpBox(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Install Dynamic Bones", MessageType.Error);
-        }
-        else
-        {
-            EditorGUI.HelpBox(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Dynamic Bones Installed", MessageType.Info);
-        }
-
-        EditorGUI.EndDisabledGroup();
-        heightIndex++;
+        GUI.EndScrollView();
 
         GUILayout.EndArea();
     }
@@ -280,7 +303,8 @@ public class LmonStore : EditorWindow
                     return versionType[1];
                 }
             }
-        } else
+        }
+        else
         {
             scriptVersions = GetLemonVersions();
 
@@ -324,6 +348,56 @@ public class LmonStore : EditorWindow
         }
 
         return null;
+    }
+
+    static bool DisplayLmonAsset(LmonStoreObject target, Rect r, float yOffset, ref int index, Vector2 scrollView)
+    {
+        bool disable = true;
+
+        if (target.findDisableScript)
+        {
+            string[] dynBone = AssetDatabase.FindAssets(target.disableScript);
+
+            if (dynBone.Length > 0)
+            {
+                for (int i = 0; i < dynBone.Length; i++)
+                {
+                    if (AssetDatabase.GUIDToAssetPath(dynBone[i]) == "Assets/DynamicBone/Scripts/" + target.disableScript + ".cs")
+                    {
+                        disable = false;
+                        break;
+                    }
+                }
+            }
+
+            EditorGUI.BeginDisabledGroup(disable);
+        }
+
+        Texture targetTexture = (Texture)target.targetImage;
+
+        GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset , 25, 25), targetTexture);
+        if (GUI.Button(new Rect(40, (30 * index) + yOffset , r.width - 60, 25), "Download "+target.displayText))
+        {
+            return true;
+
+        }
+        index++;
+
+        if (target.findDisableScript)
+        {
+            EditorGUI.EndDisabledGroup();
+
+            if (disable)
+            {
+                EditorGUI.HelpBox(new Rect(40, ((30 * index)) + yOffset , r.width - 60, 25), "Install: " + target.disableScript, MessageType.Error);
+            }
+            else
+            {
+                EditorGUI.HelpBox(new Rect(40, ((30 * index)) + yOffset , r.width - 60, 25), target.disableScript + " Installed", MessageType.Info);
+            }
+            index++;
+        }
+        return false;
     }
 }
 #endif
