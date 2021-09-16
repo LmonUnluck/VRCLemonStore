@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
@@ -19,29 +19,37 @@ public class LmonStore : EditorWindow
 {
     const string storeVersion = "v1.2";
     static string[] scriptVersions;
-    //static List<LmonStoreObject> menuItems = new List<LmonStoreObject>();
-    static Dictionary<StoreCategory, List<LmonStoreObject>> menuItems = new Dictionary<StoreCategory, List<LmonStoreObject>>();
-    
+
+#if MENUITEM
+    static Dictionary<StoreCategory, List<LmonStoreMenuItem>> menuItems = new Dictionary<StoreCategory, List<LmonStoreMenuItem>>();
+#endif
+
+    static LmonStore staticWindow;
 
     [MenuItem("Lmon/Store")]
     public static void ShowWindow()
     {
+#if MENUITEM
         menuItems.Clear();
         for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
         {
-            menuItems.Add((StoreCategory)i, new List<LmonStoreObject>());
+            menuItems.Add((StoreCategory)i, new List<LmonStoreMenuItem>());
         }
-        EditorWindow window = GetWindow<LmonStore>("Lmon Store");
+#endif
+        LmonStore window = GetWindow<LmonStore>("Lmon Store");
         window.maxSize = new Vector2(400, 395);
         window.minSize = window.maxSize;
 
         scriptVersions = GetLemonVersions();
-
+#if MENUITEM
         SearchItems();
+#endif
+
+        staticWindow = window;
     }
 
     static int totalItems = 0;
-
+#if MENUITEM
     static void SearchItems()
     {
         totalItems = 0;
@@ -51,8 +59,8 @@ public class LmonStore : EditorWindow
             try
             {
                 string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\','/');
-                LmonStoreObject newObj = (LmonStoreObject)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreObject));
-                menuItems[newObj.category].Add(newObj);
+                LmonStoreMenuItem newMenuItem = (LmonStoreMenuItem)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreMenuItem));
+                menuItems[newMenuItem.category].Add(newMenuItem);
                 totalItems++;
             }
             catch (Exception e)
@@ -62,7 +70,7 @@ public class LmonStore : EditorWindow
 
         }
     }
-
+#endif
     string file;
 
     int sdkType = 0;
@@ -82,8 +90,16 @@ public class LmonStore : EditorWindow
     const string sdk2 = "https://vrchat.com/download/sdk2";
     const string udonSharpSdK = "https://github.com/MerlinVR/UdonSharp/releases/latest";
 
+    bool forceInstall = false;
+
+
+
     private void OnGUI()
     {
+        if (staticWindow == null)
+        {
+            ShowWindow();
+        }
         EditorGUI.BeginDisabledGroup(downloading);
         Rect r = new Rect(10, 10, position.width - 20, 380);
         if (downloading)
@@ -94,7 +110,7 @@ public class LmonStore : EditorWindow
             {
                 downloading = false;
             }
-            
+
         }
         else
         {
@@ -106,7 +122,8 @@ public class LmonStore : EditorWindow
                     {
                         EditorGUILayout.HelpBox("Importing", MessageType.Warning);
                         r.y += 100;
-                        AssetDatabase.ImportPackage(loadPath, true);
+                        AssetDatabase.ImportPackage(loadPath, !forceInstall);
+                        forceInstall = false;
                         import = false;
                     }
                 }
@@ -116,7 +133,7 @@ public class LmonStore : EditorWindow
         Rect displayBox = new Rect(r.x - 5, r.y - 5, r.width + 10, r.height + 10);
         GUI.backgroundColor = defaultColor * 0.75f;
 
-        
+
 
         GUI.Box(displayBox, "");
         GUI.backgroundColor = defaultColor;
@@ -132,6 +149,18 @@ public class LmonStore : EditorWindow
                 DownloadPackage("LmonStore");
             }
             yOffset += 60;
+        }
+        else
+        {
+#if !MENUITEM
+            DownloadPackage("LmonStoreMenuItem");
+#else
+            if (LmonStoreMenuItem.version != ExtractVersion("LmonStoreMenuItem"))
+            {
+                forceInstall = true;
+                DownloadPackage("LmonStoreMenuItem");
+            }
+#endif
         }
 
         EditorGUI.BeginDisabledGroup(downloading);
@@ -194,21 +223,29 @@ public class LmonStore : EditorWindow
 
         if (storeSelection == 0)
         {
-            Rect scrollRect = new Rect(displayBox.x, displayBox.y + yOffset, displayBox.width-15, displayBox.height - yOffset);
-            
-            viewPoint = GUI.BeginScrollView(scrollRect, viewPoint, new Rect(0, 0, scrollRect.width - 100, (30 * totalItems)), false, true,null, new GUIStyle(GUI.skin.verticalScrollbar));
+            Rect scrollRect = new Rect(displayBox.x, displayBox.y + yOffset, displayBox.width - 15, displayBox.height - yOffset);
+
+            viewPoint = GUI.BeginScrollView(scrollRect, viewPoint, new Rect(0, 0, scrollRect.width - 100, (30 * totalItems) + 50), false, true, null, new GUIStyle(GUI.skin.verticalScrollbar));
+#if MENUITEM
             for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
             {
-                List<LmonStoreObject> foundList = menuItems[(StoreCategory)i];
+#if !UDON
+                if ((StoreCategory)i == StoreCategory.World)
+                {
+                    continue;
+                }
+#endif
+                List<LmonStoreMenuItem> foundList = menuItems[(StoreCategory)i];
                 for (int x = 0; x < foundList.Count; x++)
                 {
-                    if (DisplayLmonAsset(foundList[x], new Rect(0,0,scrollRect.width,scrollRect.height), 0, ref heightIndex,viewPoint))
+                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], new Rect(0, 0, scrollRect.width, scrollRect.height), 0, ref heightIndex, viewPoint))
                     {
                         if (foundList[x].DownloadType == DownloadType.Lmon)
                         {
                             downloading = true;
                             DownloadPackage(foundList[x].AssetName);
-                        } else if(foundList[x].DownloadType == DownloadType.GitHub)
+                        }
+                        else if (foundList[x].DownloadType == DownloadType.GitHub)
                         {
                             downloading = true;
                             string versionNumber = GetLatestGitVersion(foundList[x].gitHubLink);
@@ -224,10 +261,11 @@ public class LmonStore : EditorWindow
                                     outputString += foundList[x].linkSegments[n];
                                 }
                             }
-                            string downloadString = string.Format("{0}/{1}/{2}", foundList[x].gitHubLink.Replace("latest", "download"), versionNumber,outputString);
+                            string downloadString = string.Format("{0}/{1}/{2}", foundList[x].gitHubLink.Replace("latest", "download"), versionNumber, outputString);
                             downloading = true;
                             DownloadPackage(downloadString, foundList[x].AssetName);
-                        } else if (foundList[x].DownloadType == DownloadType.Direct)
+                        }
+                        else if (foundList[x].DownloadType == DownloadType.Direct)
                         {
                             downloading = true;
                             DownloadPackage(foundList[x].directLink, foundList[x].AssetName);
@@ -235,19 +273,38 @@ public class LmonStore : EditorWindow
                     }
                 }
             }
-        } else
+#endif
+        }
+        else
         {
-            List<LmonStoreObject> foundList = menuItems[(StoreCategory)storeSelection-1];
-            viewPoint = GUI.BeginScrollView(displayBox, viewPoint, new Rect(0, 0, displayBox.x, (30 * foundList.Count)),false,true);
-            for (int x = 0; x < foundList.Count; x++)
+#if MENUITEM
+            bool display = true;
+
+            List<LmonStoreMenuItem> foundList = menuItems[(StoreCategory)storeSelection - 1];
+            viewPoint = GUI.BeginScrollView(displayBox, viewPoint, new Rect(0, 0, displayBox.width, (30 * foundList.Count)), false, true);
+
+            if ((StoreCategory)storeSelection - 1 == StoreCategory.World)
             {
-                if (DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex,viewPoint))
+#if !UDON
+                display = false;
+                EditorGUILayout.HelpBox("Missing Udon", MessageType.Error);
+#endif
+            }
+
+            if (display)
+            {
+                for (int x = 0; x < foundList.Count; x++)
                 {
-                    downloading = true;
-                    DownloadPackage(foundList[x].AssetName);
+                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex, viewPoint))
+                    {
+                        downloading = true;
+                        DownloadPackage(foundList[x].AssetName);
+                    }
                 }
             }
+#endif
         }
+
         GUI.EndScrollView();
 
         GUILayout.EndArea();
