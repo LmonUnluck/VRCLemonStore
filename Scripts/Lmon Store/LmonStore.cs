@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
@@ -158,11 +158,14 @@ public class LmonStore : EditorWindow
         else
         {
 #if !MENUITEM
+            downloading = true;
+            forceInstall = true;
             DownloadPackage("LmonStoreMenuItem");
 #else
             if (LmonStoreMenuItem.version != ExtractVersion("LmonStoreMenuItem"))
             {
                 forceInstall = true;
+                downloading = true;
                 DownloadPackage("LmonStoreMenuItem");
             }
 #endif
@@ -255,17 +258,12 @@ public class LmonStore : EditorWindow
                             downloading = true;
                             string versionNumber = GetLatestGitVersion(foundList[x].gitHubLink);
                             string outputString = "";
-                            for (int n = 0; n < foundList[x].linkSegments.Length; n++)
+                            for (int n = 0; n < foundList[x].linkSegments.Length - 1; n++)
                             {
-                                if (i < foundList[x].linkSegments.Length - 1)
-                                {
-                                    outputString += foundList[x].linkSegments[n] + versionNumber;
-                                }
-                                else
-                                {
-                                    outputString += foundList[x].linkSegments[n];
-                                }
+                                outputString += foundList[x].linkSegments[n] + versionNumber;
                             }
+
+                            outputString += foundList[x].linkSegments[foundList[x].linkSegments.Length - 1];
                             string downloadString = string.Format("{0}/{1}/{2}", foundList[x].gitHubLink.Replace("latest", "download"), versionNumber, outputString);
                             downloading = true;
                             DownloadPackage(downloadString, foundList[x].AssetName);
