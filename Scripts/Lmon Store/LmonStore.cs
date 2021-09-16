@@ -9,23 +9,68 @@ using UnityEditor;
 using UnityEngine.Networking;
 using System.Net;
 using System;
+
+public enum StoreCategory
+{
+    Misc, Avatar, World
+}
+
 public class LmonStore : EditorWindow
 {
-    const string storeVersion = "v1.1";
+    const string storeVersion = "v1.2";
     static string[] scriptVersions;
+
+#if MENUITEM
+    static Dictionary<StoreCategory, List<LmonStoreMenuItem>> menuItems = new Dictionary<StoreCategory, List<LmonStoreMenuItem>>();
+#endif
+
+    static LmonStore staticWindow;
 
     [MenuItem("Lmon/Store")]
     public static void ShowWindow()
     {
-        EditorWindow window = GetWindow<LmonStore>("Lmon Store");
+#if MENUITEM
+        menuItems.Clear();
+        for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
+        {
+            menuItems.Add((StoreCategory)i, new List<LmonStoreMenuItem>());
+        }
+#endif
+        LmonStore window = GetWindow<LmonStore>("Lmon Store");
         window.maxSize = new Vector2(400, 395);
         window.minSize = window.maxSize;
 
         scriptVersions = GetLemonVersions();
+#if MENUITEM
+        SearchItems();
+#endif
+
+        staticWindow = window;
     }
 
+    static int totalItems = 0;
+#if MENUITEM
+    static void SearchItems()
+    {
+        totalItems = 0;
+        string[] scrObject = Directory.GetFiles(Application.dataPath + "/Scripts/Lmon Store/Menu Items", "*.asset");
+        for (int i = 0; i < scrObject.Length; i++)
+        {
+            try
+            {
+                string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\','/');
+                LmonStoreMenuItem newMenuItem = (LmonStoreMenuItem)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreMenuItem));
+                menuItems[newMenuItem.category].Add(newMenuItem);
+                totalItems++;
+            }
+            catch (Exception e)
+            {
+                Debug.Log("Failed to load: " + (scrObject[i]) + "\n"+e.Message);
+            }
 
-
+        }
+    }
+#endif
     string file;
 
     int sdkType = 0;
@@ -34,7 +79,10 @@ public class LmonStore : EditorWindow
     bool import = false;
     UnityWebRequest webRequest;
     string loadPath = "";
-    bool sdk = false;
+
+    int storeSelection = 0;
+
+    Vector2 viewPoint = Vector2.zero;
 
 
     const string sdk3World = "https://vrchat.com/download/sdk3-worlds";
@@ -42,17 +90,27 @@ public class LmonStore : EditorWindow
     const string sdk2 = "https://vrchat.com/download/sdk2";
     const string udonSharpSdK = "https://github.com/MerlinVR/UdonSharp/releases/latest";
 
+    bool forceInstall = false;
+
+
+
     private void OnGUI()
     {
+        if (staticWindow == null)
+        {
+            ShowWindow();
+        }
+        EditorGUI.BeginDisabledGroup(downloading);
         Rect r = new Rect(10, 10, position.width - 20, 380);
         if (downloading)
         {
+            EditorGUILayout.HelpBox("Downloading", MessageType.Warning);
+            r.y += 100;
             if (webRequest.isDone)
             {
                 downloading = false;
             }
-            r.y += 100;
-            EditorGUILayout.HelpBox("Downloading", MessageType.Warning);
+
         }
         else
         {
@@ -62,9 +120,11 @@ public class LmonStore : EditorWindow
                 {
                     if (webRequest.isDone)
                     {
-                        AssetDatabase.ImportPackage(loadPath, sdk);
+                        EditorGUILayout.HelpBox("Importing", MessageType.Warning);
+                        r.y += 100;
+                        AssetDatabase.ImportPackage(loadPath, !forceInstall);
+                        forceInstall = false;
                         import = false;
-                        sdk = false;
                     }
                 }
             }
@@ -72,6 +132,9 @@ public class LmonStore : EditorWindow
         Color defaultColor = GUI.backgroundColor;
         Rect displayBox = new Rect(r.x - 5, r.y - 5, r.width + 10, r.height + 10);
         GUI.backgroundColor = defaultColor * 0.75f;
+
+
+
         GUI.Box(displayBox, "");
         GUI.backgroundColor = defaultColor;
         GUILayout.BeginArea(r);
@@ -80,7 +143,24 @@ public class LmonStore : EditorWindow
         if (currentStoreVersion != storeVersion)
         {
             EditorGUILayout.HelpBox(string.Format("Version Mismatch ({0}), download {1}", storeVersion, currentStoreVersion), MessageType.Warning);
-            yOffset += 50;
+            if (GUILayout.Button("Download Latest Version"))
+            {
+                downloading = true;
+                DownloadPackage("LmonStore");
+            }
+            yOffset += 60;
+        }
+        else
+        {
+#if !MENUITEM
+            DownloadPackage("LmonStoreMenuItem");
+#else
+            if (LmonStoreMenuItem.version != ExtractVersion("LmonStoreMenuItem"))
+            {
+                forceInstall = true;
+                DownloadPackage("LmonStoreMenuItem");
+            }
+#endif
         }
 
         EditorGUI.BeginDisabledGroup(downloading);
@@ -98,7 +178,6 @@ public class LmonStore : EditorWindow
             if (GUILayout.Button("Download UdonSharp"))
             {
                 downloading = true;
-                sdk = true;
                 DownloadPackage(string.Format("https://github.com/MerlinVR/UdonSharp/releases/download/{0}/UdonSharp_{0}.unitypackage", GetLatestGitVersion(udonSharpSdK)), "UdonSharp");
             }
             EditorGUI.EndDisabledGroup();
@@ -112,98 +191,124 @@ public class LmonStore : EditorWindow
                 if (sdkType == 0)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk2, "SDK_2");
                 }
                 else if (sdkType == 1)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk3Avatar, "SDK3_Avatar");
                 }
                 else if (sdkType == 2)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk3World, "SDK3_World");
                 }
             }
         }
-        Texture materialTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Material Transfer.png");
+        yOffset += 40;
+
+        List<string> allCategories = new List<string>();
+
+        allCategories.Add("All");
+
+        for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
+        {
+            allCategories.Add(Enum.GetNames(typeof(StoreCategory))[i]);
+        }
+
+        storeSelection = EditorGUILayout.Popup(storeSelection, allCategories.ToArray());
+        yOffset += 20;
 
         int heightIndex = 0;
 
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), materialTexture);
-        if (GUI.Button(new Rect(40, 50 + (30 * heightIndex) + yOffset, r.width - 40, 25), "Download Material Transfer"))
+        if (storeSelection == 0)
         {
-            downloading = true;
-            DownloadPackage("MaterialTransfer");
+            Rect scrollRect = new Rect(displayBox.x, displayBox.y + yOffset, displayBox.width - 15, displayBox.height - yOffset);
 
-        }
-        heightIndex++;
-
-        //EditorGUI.BeginDisabledGroup(true);
-        //Texture prefabTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Prefab Transfer.png");
-        //
-        //GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), prefabTexture);
-        //if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25),"Download Prefab Transfer"))
-        //{
-        //    
-        //}
-        //EditorGUI.EndDisabledGroup();
-        //
-        //heightIndex++;
-
-        Texture avatarThumbnailTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Thumbnail Creator.png");
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), avatarThumbnailTexture);
-        if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Download Avatar Thumbnail Creator"))
-        {
-            downloading = true;
-            DownloadPackage("AvatarThumbnailCreator");
-        }
-        heightIndex++;
-
-        Texture dynmaicBoneTexture = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Scripts/Lmon Store/Images/Dynamic Bone Fixer.png");
-
-        bool disableDynFix = true;
-
-        string[] dynBone = AssetDatabase.FindAssets("DynamicBone");
-
-        if (dynBone.Length > 0)
-        {
-            for (int i = 0; i < dynBone.Length; i++)
+            viewPoint = GUI.BeginScrollView(scrollRect, viewPoint, new Rect(0, 0, scrollRect.width - 100, (30 * totalItems) + 50), false, true, null, new GUIStyle(GUI.skin.verticalScrollbar));
+#if MENUITEM
+            for (int i = 0; i < Enum.GetNames(typeof(StoreCategory)).Length; i++)
             {
-                if (AssetDatabase.GUIDToAssetPath(dynBone[i]) == "Assets/DynamicBone/Scripts/DynamicBone.cs")
+#if !UDON
+                if ((StoreCategory)i == StoreCategory.World)
                 {
-                    disableDynFix = false;
-                    break;
+                    continue;
+                }
+#endif
+                List<LmonStoreMenuItem> foundList = menuItems[(StoreCategory)i];
+                for (int x = 0; x < foundList.Count; x++)
+                {
+                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], new Rect(0, 0, scrollRect.width, scrollRect.height), 0, ref heightIndex, viewPoint))
+                    {
+                        if (foundList[x].DownloadType == DownloadType.Lmon)
+                        {
+                            downloading = true;
+                            DownloadPackage(foundList[x].AssetName);
+                        }
+                        else if (foundList[x].DownloadType == DownloadType.GitHub)
+                        {
+                            downloading = true;
+                            string versionNumber = GetLatestGitVersion(foundList[x].gitHubLink);
+                            string outputString = "";
+                            for (int n = 0; n < foundList[x].linkSegments.Length; n++)
+                            {
+                                if (i < foundList[x].linkSegments.Length - 1)
+                                {
+                                    outputString += foundList[x].linkSegments[n] + versionNumber;
+                                }
+                                else
+                                {
+                                    outputString += foundList[x].linkSegments[n];
+                                }
+                            }
+                            string downloadString = string.Format("{0}/{1}/{2}", foundList[x].gitHubLink.Replace("latest", "download"), versionNumber, outputString);
+                            downloading = true;
+                            DownloadPackage(downloadString, foundList[x].AssetName);
+                        }
+                        else if (foundList[x].DownloadType == DownloadType.Direct)
+                        {
+                            downloading = true;
+                            DownloadPackage(foundList[x].directLink, foundList[x].AssetName);
+                        }
+                    }
                 }
             }
-        }
-
-        EditorGUI.BeginDisabledGroup(disableDynFix);
-
-        GUI.DrawTexture(new Rect(10, (50 + (30 * heightIndex)) + yOffset, 25, 25), dynmaicBoneTexture);
-        if (GUI.Button(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Download Dynamic Bone Setter"))
-        {
-            downloading = true;
-            DownloadPackage("DynamicBoneSetter");
-        }
-        EditorGUI.EndDisabledGroup();
-        heightIndex++;
-        if (disableDynFix)
-        {
-            EditorGUI.HelpBox(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Install Dynamic Bones", MessageType.Error);
+#endif
         }
         else
         {
-            EditorGUI.HelpBox(new Rect(40, (50 + (30 * heightIndex)) + yOffset, r.width - 40, 25), "Dynamic Bones Installed", MessageType.Info);
+#if MENUITEM
+            bool display = true;
+
+            List<LmonStoreMenuItem> foundList = menuItems[(StoreCategory)storeSelection - 1];
+            viewPoint = GUI.BeginScrollView(displayBox, viewPoint, new Rect(0, 0, displayBox.width, (30 * foundList.Count)), false, true);
+
+            if ((StoreCategory)storeSelection - 1 == StoreCategory.World)
+            {
+#if !UDON
+                display = false;
+                EditorGUILayout.HelpBox("Missing Udon", MessageType.Error);
+#endif
+            }
+
+            if (display)
+            {
+                for (int x = 0; x < foundList.Count; x++)
+                {
+                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex, viewPoint))
+                    {
+                        downloading = true;
+                        DownloadPackage(foundList[x].AssetName);
+                    }
+                }
+            }
+#endif
         }
 
-        EditorGUI.EndDisabledGroup();
-        heightIndex++;
+        GUI.EndScrollView();
 
         GUILayout.EndArea();
+        EditorGUI.EndDisabledGroup();
     }
 
     void DownloadPackage(string fileName)
@@ -280,7 +385,8 @@ public class LmonStore : EditorWindow
                     return versionType[1];
                 }
             }
-        } else
+        }
+        else
         {
             scriptVersions = GetLemonVersions();
 
