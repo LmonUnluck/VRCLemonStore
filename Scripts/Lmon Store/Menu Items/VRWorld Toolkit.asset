@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
   m_Name: VRWorld Toolkit
   m_EditorClassIdentifier: 
-  AssetName: 
-  displayText: 
-  DownloadType: 0
-  category: 0
+  AssetName: VRWorldToolkit
+  displayText: VR World Toolkit
+  DownloadType: 1
+  category: 2
   directLink: 
-  gitHubLink: 
+  gitHubLink: https://github.com/oneVR/VRWorldToolkit/releases/latest
   removeV: 0
-  linkSegments: []
+  linkSegments:
+  - VRWorldToolkit
+  - .unitypackage
   targetImage: {fileID: 0}
   disableScript: 
   findDisableScript: 0

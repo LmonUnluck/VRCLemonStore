@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
@@ -13,6 +13,11 @@ using System;
 public enum StoreCategory
 {
     Misc, Avatar, World
+}
+
+public enum DownloadType
+{
+    Direct, GitHub, Lmon
 }
 
 public class LmonStore : EditorWindow
@@ -60,7 +65,7 @@ public class LmonStore : EditorWindow
             {
                 string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\','/');
                 LmonStoreMenuItem newMenuItem = (LmonStoreMenuItem)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreMenuItem));
-                menuItems[newMenuItem.category].Add(newMenuItem);
+                menuItems[(StoreCategory)newMenuItem.category].Add(newMenuItem);
                 totalItems++;
             }
             catch (Exception e)
@@ -238,14 +243,14 @@ public class LmonStore : EditorWindow
                 List<LmonStoreMenuItem> foundList = menuItems[(StoreCategory)i];
                 for (int x = 0; x < foundList.Count; x++)
                 {
-                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], new Rect(0, 0, scrollRect.width, scrollRect.height), 0, ref heightIndex, viewPoint))
+                    if (LmonStoreMenuItemEditor.DisplayLmonAsset(foundList[x], new Rect(0, 0, scrollRect.width, scrollRect.height), 0, ref heightIndex, viewPoint))
                     {
-                        if (foundList[x].DownloadType == DownloadType.Lmon)
+                        if (foundList[x].DownloadType == (int)DownloadType.Lmon)
                         {
                             downloading = true;
                             DownloadPackage(foundList[x].AssetName);
                         }
-                        else if (foundList[x].DownloadType == DownloadType.GitHub)
+                        else if (foundList[x].DownloadType == (int)DownloadType.GitHub)
                         {
                             downloading = true;
                             string versionNumber = GetLatestGitVersion(foundList[x].gitHubLink);
@@ -265,7 +270,7 @@ public class LmonStore : EditorWindow
                             downloading = true;
                             DownloadPackage(downloadString, foundList[x].AssetName);
                         }
-                        else if (foundList[x].DownloadType == DownloadType.Direct)
+                        else if (foundList[x].DownloadType == (int)DownloadType.Direct)
                         {
                             downloading = true;
                             DownloadPackage(foundList[x].directLink, foundList[x].AssetName);
@@ -295,7 +300,7 @@ public class LmonStore : EditorWindow
             {
                 for (int x = 0; x < foundList.Count; x++)
                 {
-                    if (LmonStoreMenuItem.DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex, viewPoint))
+                    if (LmonStoreMenuItemEditor.DisplayLmonAsset(foundList[x], r, yOffset, ref heightIndex, viewPoint))
                     {
                         downloading = true;
                         DownloadPackage(foundList[x].AssetName);
@@ -317,7 +322,7 @@ public class LmonStore : EditorWindow
 
         webRequest = new UnityWebRequest(string.Format("https://github.com/LmonUnluck/VRCLemonStore/releases/download/{0}/{1}.unitypackage", ExtractVersion(fileName), fileName), UnityWebRequest.kHttpVerbGET);
         string path = Path.Combine(Application.persistentDataPath, fileName + ".unitypackage");
-        webRequest.downloadHandler = new DownloadHandlerFile(path);
+        webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
         webRequest.SendWebRequest();
         if (webRequest.isNetworkError || webRequest.isHttpError)
         {
@@ -336,7 +341,7 @@ public class LmonStore : EditorWindow
         import = true;
         webRequest = new UnityWebRequest(fileName, UnityWebRequest.kHttpVerbGET);
         string path = Path.Combine(Application.persistentDataPath, outputName + ".unitypackage");
-        webRequest.downloadHandler = new DownloadHandlerFile(path);
+        webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
         webRequest.SendWebRequest();
         while (webRequest.responseCode == -1)
         {

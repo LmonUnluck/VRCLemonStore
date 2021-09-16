@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AssetName: DynamicBoneSetter
   displayText: Dynamic Bone Setter
-  LmonAsset: 1
+  DownloadType: 2
   category: 1
+  directLink: 
+  gitHubLink: 
+  removeV: 0
   linkSegments:
   - https://github.com/llealloo/vrc-udon-audio-link/releases/download/
   - /AudioLink_
   - .unitypackage
   targetImage: {fileID: 2800000, guid: 234e27bc2cafdd543ab2d1c270c87fce, type: 3}
+  disableScript: Assets/DynamicBone/Scripts/DynamicBone.cs
+  findDisableScript: 1

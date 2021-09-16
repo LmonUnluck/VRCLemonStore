@@ -12,13 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
   m_Name: Udon Video Player
   m_EditorClassIdentifier: 
-  AssetName: 
-  displayText: 
-  DownloadType: 0
-  category: 0
+  AssetName: USharpVideo
+  displayText: Udon Video Player
+  DownloadType: 1
+  category: 2
   directLink: 
-  gitHubLink: 
-  linkSegments: []
+  gitHubLink: https://github.com/MerlinVR/USharpVideo/releases/latest
+  removeV: 0
+  linkSegments:
+  - USharpVideo_
+  - .unitypackage
   targetImage: {fileID: 0}
   disableScript: 
   findDisableScript: 0

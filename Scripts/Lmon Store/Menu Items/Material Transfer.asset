@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AssetName: MaterialTransfer
   displayText: Material Transfer
-  LmonAsset: 1
+  DownloadType: 2
   category: 1
+  directLink: 
+  gitHubLink: 
+  removeV: 0
   linkSegments:
   - https://github.com/llealloo/vrc-udon-audio-link/releases/download/
   - /AudioLink_

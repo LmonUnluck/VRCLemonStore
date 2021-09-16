@@ -7,21 +7,17 @@ using UnityEditor;
 using UnityEditor.VersionControl;
 #endif
 
-public enum DownloadType
-{
-    Direct, GitHub, Lmon
-}
-
 [CreateAssetMenu(fileName = "Item", menuName = "Lmon/New Menu Item", order = 3)]
 public class LmonStoreMenuItem : ScriptableObject
 {
     public const string version = "v1.2";
-    public string AssetName;
+    
+    public string AssetName = "AssetName";
 
-    public string displayText;
+    public string displayText = "Asset Name";
 
-    public DownloadType DownloadType = DownloadType.Direct;
-    public StoreCategory category = StoreCategory.Misc;
+    public int DownloadType = 0;
+    public int category = 0;
 
     public string directLink = "";
 
@@ -34,7 +30,16 @@ public class LmonStoreMenuItem : ScriptableObject
 
     public string disableScript = "";
     public bool findDisableScript = false;
+}
 
+#if UNITY_EDITOR
+[CustomEditor(typeof(LmonStoreMenuItem))]
+public class LmonStoreMenuItemEditor : Editor
+{
+    bool arrayToggle = false;
+    int newLength;
+    bool firstRun = true;
+    string debugString = "v1.0";
     public static Color[] categoryColors = new Color[] { Color.red, Color.blue, Color.green };
 
     public static bool DisplayLmonAsset(LmonStoreMenuItem target, Rect r, float yOffset, ref int index, Vector2 scrollView)
@@ -66,14 +71,14 @@ public class LmonStoreMenuItem : ScriptableObject
 
         if (target.targetImage != null)
         {
-            if (target.DownloadType == DownloadType.Lmon)
+            if (target.DownloadType == 2)
             {
                 Texture targetTexture = (Texture)target.targetImage;
 
                 GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset, 25, 25), targetTexture);
             }
         }
-        if (target.DownloadType == DownloadType.GitHub)
+        if (target.DownloadType == 1)
         {
             Texture targetTexture = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Lmon Store/Images/GitHub-Mark-Light-64px.png", typeof(Texture));
             if (!EditorGUIUtility.isProSkin)
@@ -110,16 +115,6 @@ public class LmonStoreMenuItem : ScriptableObject
         }
         return false;
     }
-}
-
-#if UNITY_EDITOR
-[CustomEditor(typeof(LmonStoreMenuItem))]
-public class LmonStoreObjectEditor : Editor
-{
-    bool arrayToggle = false;
-    int newLength;
-    bool firstRun = true;
-    string debugString = "v1.0";
 
     public override void OnInspectorGUI()
     {
@@ -136,21 +131,21 @@ public class LmonStoreObjectEditor : Editor
 
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Menu Category");
-        lmonObject.category = (StoreCategory)EditorGUILayout.EnumPopup(lmonObject.category);
+        lmonObject.category = EditorGUILayout.Popup(lmonObject.category,System.Enum.GetNames(typeof(StoreCategory)));
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Download Type");
-        lmonObject.DownloadType = (DownloadType)EditorGUILayout.EnumPopup(lmonObject.DownloadType);
+        lmonObject.DownloadType = EditorGUILayout.Popup(lmonObject.DownloadType, System.Enum.GetNames(typeof(DownloadType)));
         EditorGUILayout.EndHorizontal();
 
-        if (lmonObject.DownloadType == DownloadType.Lmon)
+        if (lmonObject.DownloadType == 2)
         {
             lmonObject.targetImage = EditorGUILayout.ObjectField((Object)lmonObject.targetImage, typeof(Texture), false);
 
             EditorGUILayout.HelpBox("Image Path: " + AssetDatabase.GetAssetPath(lmonObject.targetImage), MessageType.Info);
         }
-        else if (lmonObject.DownloadType == DownloadType.GitHub)
+        else if (lmonObject.DownloadType == 1)
         {
             lmonObject.gitHubLink = EditorGUILayout.TextField("Github link (lastest)", lmonObject.gitHubLink);
             EditorGUILayout.BeginHorizontal();
@@ -245,10 +240,12 @@ public class LmonStoreObjectEditor : Editor
                 EditorGUILayout.HelpBox("Compiled Link: " + outputString, MessageType.Info);
             }
         }
-        else if (lmonObject.DownloadType == DownloadType.Direct)
+        else if (lmonObject.DownloadType == 0)
         {
             lmonObject.directLink = EditorGUILayout.TextField("Direct link", lmonObject.directLink);
         }
+
+        EditorUtility.SetDirty(lmonObject);
     }
 }
 #endif

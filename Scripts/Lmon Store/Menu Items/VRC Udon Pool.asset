@@ -12,13 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
   m_Name: VRC Udon Pool
   m_EditorClassIdentifier: 
-  AssetName: 
-  displayText: 
-  DownloadType: 0
-  category: 0
+  AssetName: vrcbce
+  displayText: Udon Pool Table
+  DownloadType: 1
+  category: 2
   directLink: 
-  gitHubLink: 
-  linkSegments: []
+  gitHubLink: https://github.com/FairlySadPanda/vrcbce/releases/latest
+  removeV: 1
+  linkSegments:
+  - VRCBCE.
+  - .unitypackage
   targetImage: {fileID: 0}
   disableScript: 
   findDisableScript: 0
