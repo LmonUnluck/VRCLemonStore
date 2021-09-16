@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
@@ -373,56 +373,6 @@ public class LmonStore : EditorWindow
         }
 
         return null;
-    }
-
-    static bool DisplayLmonAsset(LmonStoreObject target, Rect r, float yOffset, ref int index, Vector2 scrollView)
-    {
-        bool disable = true;
-
-        if (target.findDisableScript)
-        {
-            string[] dynBone = AssetDatabase.FindAssets(target.disableScript);
-
-            if (dynBone.Length > 0)
-            {
-                for (int i = 0; i < dynBone.Length; i++)
-                {
-                    if (AssetDatabase.GUIDToAssetPath(dynBone[i]) == "Assets/DynamicBone/Scripts/" + target.disableScript + ".cs")
-                    {
-                        disable = false;
-                        break;
-                    }
-                }
-            }
-
-            EditorGUI.BeginDisabledGroup(disable);
-        }
-
-        Texture targetTexture = (Texture)target.targetImage;
-
-        GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset , 25, 25), targetTexture);
-        if (GUI.Button(new Rect(40, (30 * index) + yOffset , r.width - 60, 25), "Download "+target.displayText))
-        {
-            return true;
-
-        }
-        index++;
-
-        if (target.findDisableScript)
-        {
-            EditorGUI.EndDisabledGroup();
-
-            if (disable)
-            {
-                EditorGUI.HelpBox(new Rect(40, ((30 * index)) + yOffset , r.width - 60, 25), "Install: " + target.disableScript, MessageType.Error);
-            }
-            else
-            {
-                EditorGUI.HelpBox(new Rect(40, ((30 * index)) + yOffset , r.width - 60, 25), target.disableScript + " Installed", MessageType.Info);
-            }
-            index++;
-        }
-        return false;
     }
 }
 #endif
