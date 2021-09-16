@@ -71,7 +71,6 @@ public class LmonStore : EditorWindow
     bool import = false;
     UnityWebRequest webRequest;
     string loadPath = "";
-    bool sdk = false;
 
     int storeSelection = 0;
 
@@ -85,15 +84,17 @@ public class LmonStore : EditorWindow
 
     private void OnGUI()
     {
+        EditorGUI.BeginDisabledGroup(downloading);
         Rect r = new Rect(10, 10, position.width - 20, 380);
         if (downloading)
         {
+            EditorGUILayout.HelpBox("Downloading", MessageType.Warning);
+            r.y += 100;
             if (webRequest.isDone)
             {
                 downloading = false;
             }
-            r.y += 100;
-            EditorGUILayout.HelpBox("Downloading", MessageType.Warning);
+            
         }
         else
         {
@@ -103,9 +104,10 @@ public class LmonStore : EditorWindow
                 {
                     if (webRequest.isDone)
                     {
-                        AssetDatabase.ImportPackage(loadPath, sdk);
+                        EditorGUILayout.HelpBox("Importing", MessageType.Warning);
+                        r.y += 100;
+                        AssetDatabase.ImportPackage(loadPath, true);
                         import = false;
-                        sdk = false;
                     }
                 }
             }
@@ -147,7 +149,6 @@ public class LmonStore : EditorWindow
             if (GUILayout.Button("Download UdonSharp"))
             {
                 downloading = true;
-                sdk = true;
                 DownloadPackage(string.Format("https://github.com/MerlinVR/UdonSharp/releases/download/{0}/UdonSharp_{0}.unitypackage", GetLatestGitVersion(udonSharpSdK)), "UdonSharp");
             }
             EditorGUI.EndDisabledGroup();
@@ -161,19 +162,16 @@ public class LmonStore : EditorWindow
                 if (sdkType == 0)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk2, "SDK_2");
                 }
                 else if (sdkType == 1)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk3Avatar, "SDK3_Avatar");
                 }
                 else if (sdkType == 2)
                 {
                     downloading = true;
-                    sdk = true;
                     DownloadPackage(sdk3World, "SDK3_World");
                 }
             }
@@ -206,8 +204,34 @@ public class LmonStore : EditorWindow
                 {
                     if (DisplayLmonAsset(foundList[x], new Rect(0,0,scrollRect.width,scrollRect.height), 0, ref heightIndex,viewPoint))
                     {
-                        downloading = true;
-                        DownloadPackage(foundList[x].AssetName);
+                        if (foundList[x].DownloadType == DownloadType.Lmon)
+                        {
+                            downloading = true;
+                            DownloadPackage(foundList[x].AssetName);
+                        } else if(foundList[x].DownloadType == DownloadType.GitHub)
+                        {
+                            downloading = true;
+                            string versionNumber = GetLatestGitVersion(foundList[x].gitHubLink);
+                            string outputString = "";
+                            for (int n = 0; n < foundList[x].linkSegments.Length; n++)
+                            {
+                                if (i < foundList[x].linkSegments.Length - 1)
+                                {
+                                    outputString += foundList[x].linkSegments[n] + versionNumber;
+                                }
+                                else
+                                {
+                                    outputString += foundList[x].linkSegments[n];
+                                }
+                            }
+                            string downloadString = string.Format("{0}/{1}/{2}", foundList[x].gitHubLink.Replace("latest", "download"), versionNumber,outputString);
+                            downloading = true;
+                            DownloadPackage(downloadString, foundList[x].AssetName);
+                        } else if (foundList[x].DownloadType == DownloadType.Direct)
+                        {
+                            downloading = true;
+                            DownloadPackage(foundList[x].directLink, foundList[x].AssetName);
+                        }
                     }
                 }
             }
@@ -227,6 +251,7 @@ public class LmonStore : EditorWindow
         GUI.EndScrollView();
 
         GUILayout.EndArea();
+        EditorGUI.EndDisabledGroup();
     }
 
     void DownloadPackage(string fileName)
