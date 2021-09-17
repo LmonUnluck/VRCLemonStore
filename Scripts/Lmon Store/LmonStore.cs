@@ -22,7 +22,7 @@ public enum DownloadType
 
 public class LmonStore : EditorWindow
 {
-    const string storeVersion = "v1.2";
+    const string storeVersion = "v1.2.1";
     static string[] scriptVersions;
 
 #if MENUITEM
