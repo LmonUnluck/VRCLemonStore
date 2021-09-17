@@ -63,14 +63,14 @@ public class LmonStore : EditorWindow
         {
             try
             {
-                string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\','/');
+                string newStr = scrObject[i].Replace(Application.dataPath, "Assets").Replace('\\', '/');
                 LmonStoreMenuItem newMenuItem = (LmonStoreMenuItem)AssetDatabase.LoadAssetAtPath(newStr, typeof(LmonStoreMenuItem));
                 menuItems[(StoreCategory)newMenuItem.category].Add(newMenuItem);
                 totalItems++;
             }
             catch (Exception e)
             {
-                Debug.Log("Failed to load: " + (scrObject[i]) + "\n"+e.Message);
+                Debug.Log("Failed to load: " + (scrObject[i]) + "\n" + e.Message);
             }
 
         }
@@ -158,12 +158,13 @@ public class LmonStore : EditorWindow
         else
         {
 #if !MENUITEM
+            EditorGUILayout.HelpBox("Please wait downloading menu items", MessageType.Warning);
             downloading = true;
-            forceInstall = true;
             DownloadPackage("LmonStoreMenuItem");
 #else
             if (LmonStoreMenuItem.version != ExtractVersion("LmonStoreMenuItem"))
             {
+                EditorGUILayout.HelpBox(string.Format("Please wait downloading menu items ({0}); current version ({1})", ExtractVersion("LmonStoreMenuItem"), LmonStoreMenuItem.version), MessageType.Warning);
                 forceInstall = true;
                 downloading = true;
                 DownloadPackage("LmonStoreMenuItem");
