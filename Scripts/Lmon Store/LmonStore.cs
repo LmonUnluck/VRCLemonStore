@@ -159,6 +159,7 @@ public class LmonStore : EditorWindow
         {
 #if !MENUITEM
             EditorGUILayout.HelpBox("Please wait downloading menu items", MessageType.Warning);
+            forceInstall = true;
             downloading = true;
             DownloadPackage("LmonStoreMenuItem");
 #else
