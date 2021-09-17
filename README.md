@@ -7,4 +7,4 @@ Check the [Wiki](https://github.com/LmonUnluck/VRCLemonStore/wiki) for info of t
 
 ## Setup
 
-All you need to do to get this to work is download [LmonStore.unitypackage](github.com/LmonUnluck/VRCLemonStore/releases/latest)
+All you need to do to get this to work is download the latest [LmonStore.unitypackage](https://github.com/LmonUnluck/VRCLemonStore/releases)
