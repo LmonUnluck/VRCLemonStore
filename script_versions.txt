@@ -1,4 +1,4 @@
-LmonStore=v1.2.1
+LmonStore=v1.2.3
 AvatarThumbnailCreator=v1.0
 MaterialTransfer=v1.0
 DynamicBoneSetter=v1.1

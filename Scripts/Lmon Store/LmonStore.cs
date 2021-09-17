@@ -22,7 +22,7 @@ public enum DownloadType
 
 public class LmonStore : EditorWindow
 {
-    const string storeVersion = "v1.2.1";
+    const string storeVersion = "v1.2.3";
     static string[] scriptVersions;
 
 #if MENUITEM
@@ -111,11 +111,18 @@ public class LmonStore : EditorWindow
         {
             EditorGUILayout.HelpBox("Downloading", MessageType.Warning);
             r.y += 100;
-            if (webRequest.isDone)
+
+            if (webRequest != null)
+            {
+                if (webRequest.isDone)
+                {
+                    downloading = false;
+                }
+            }
+            else
             {
                 downloading = false;
             }
-
         }
         else
         {
@@ -159,18 +166,21 @@ public class LmonStore : EditorWindow
         {
 #if !MENUITEM
             EditorGUILayout.HelpBox("Please wait downloading menu items", MessageType.Warning);
-            forceInstall = true;
             downloading = true;
             DownloadPackage("LmonStoreMenuItem");
 #else
             if (LmonStoreMenuItem.version != ExtractVersion("LmonStoreMenuItem"))
             {
+
                 EditorGUILayout.HelpBox(string.Format("Please wait downloading menu items ({0}); current version ({1})", ExtractVersion("LmonStoreMenuItem"), LmonStoreMenuItem.version), MessageType.Warning);
                 forceInstall = true;
                 downloading = true;
                 DownloadPackage("LmonStoreMenuItem");
+                GUILayout.EndArea();
+                return;
             }
 #endif
+            EditorGUI.EndDisabledGroup();
         }
 
         EditorGUI.BeginDisabledGroup(downloading);
@@ -318,45 +328,76 @@ public class LmonStore : EditorWindow
 
     void DownloadPackage(string fileName)
     {
+        string path = Path.Combine(Application.persistentDataPath, fileName + ".unitypackage");
+
+        if (File.Exists(path) && !import)
+        {
+            File.Delete(path);
+        }
+
         import = true;
 
-        webRequest = new UnityWebRequest(string.Format("https://github.com/LmonUnluck/VRCLemonStore/releases/download/{0}/{1}.unitypackage", ExtractVersion(fileName), fileName), UnityWebRequest.kHttpVerbGET);
-        string path = Path.Combine(Application.persistentDataPath, fileName + ".unitypackage");
-        webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
-        webRequest.SendWebRequest();
-        if (webRequest.isNetworkError || webRequest.isHttpError)
+        try
         {
-            Debug.LogError(webRequest.error);
-            downloading = false;
+            webRequest = new UnityWebRequest(string.Format("https://github.com/LmonUnluck/VRCLemonStore/releases/download/{0}/{1}.unitypackage", ExtractVersion(fileName), fileName), UnityWebRequest.kHttpVerbGET);
+            webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
+            webRequest.SendWebRequest();
+            if (webRequest.isNetworkError || webRequest.isHttpError)
+            {
+                Debug.LogError(webRequest.error);
+                downloading = false;
+            }
+            else
+            {
+                loadPath = path;
+                downloading = false;
+            }
         }
-        else
+        catch
         {
-            loadPath = path;
-            downloading = false;
+
         }
+
+
     }
 
     void DownloadPackage(string fileName, string outputName)
     {
+        string path = Path.Combine(Application.persistentDataPath, fileName + ".unitypackage");
+
+        if (File.Exists(path) && !import)
+        {
+            File.Delete(path);
+        }
+
         import = true;
-        webRequest = new UnityWebRequest(fileName, UnityWebRequest.kHttpVerbGET);
-        string path = Path.Combine(Application.persistentDataPath, outputName + ".unitypackage");
-        webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
-        webRequest.SendWebRequest();
-        while (webRequest.responseCode == -1)
+
+        try
         {
-            //do something, or nothing while blocking
+            webRequest = new UnityWebRequest(fileName, UnityWebRequest.kHttpVerbGET);
+            webRequest.downloadHandler = new DownloadHandlerFile(path.Replace("\\", "/"));
+            webRequest.SendWebRequest();
+            while (webRequest.responseCode == -1)
+            {
+                //do something, or nothing while blocking
+            }
+            if (webRequest.isNetworkError || webRequest.isHttpError)
+            {
+                Debug.LogError(webRequest.error);
+                downloading = false;
+            }
+            else
+            {
+                loadPath = path;
+                downloading = false;
+            }
         }
-        if (webRequest.isNetworkError || webRequest.isHttpError)
+        catch
         {
-            Debug.LogError(webRequest.error);
-            downloading = false;
+
         }
-        else
-        {
-            loadPath = path;
-            downloading = false;
-        }
+
+
     }
 
     string GetLatestGitVersion(string url)
