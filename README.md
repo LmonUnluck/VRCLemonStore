@@ -3,4 +3,6 @@ A Unity Editor Window that can get the Latest VRChat SDK for both 2.0 and 3.0 as
 
 Check the [Wiki](https://github.com/LmonUnluck/VRCLemonStore/wiki) for info of the downloadable assets
 
+## Setup
+
 All you need to do to get this to work is download [LmonStore.unitypackage](github.com/LmonUnluck/VRCLemonStore/releases/latest)
