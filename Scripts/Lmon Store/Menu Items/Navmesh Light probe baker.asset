@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Navmesh Light probe baker
   m_EditorClassIdentifier: 
   AssetName: NMLPB
-  displayText: Nave Mesh Light Probe Baker
+  displayText: Nav Mesh Light Probe Baker
   DownloadType: 0
   category: 0
   directLink: https://cdn.discordapp.com/attachments/735502794613588059/735502881943453717/NavmeshProbeBaker.unitypackage
