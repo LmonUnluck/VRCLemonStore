@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
   m_Name: Navmesh Light probe baker
   m_EditorClassIdentifier: 
-  AssetName: AssetName
-  displayText: Asset Name
+  AssetName: NMLPB
+  displayText: Nave Mesh Light Probe Baker
   DownloadType: 0
   category: 0
-  directLink: 
+  directLink: https://cdn.discordapp.com/attachments/735502794613588059/735502881943453717/NavmeshProbeBaker.unitypackage
   gitHubLink: 
   removeV: 0
   linkSegments: []

@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
   m_Name: Combo Gesture Expressions
   m_EditorClassIdentifier: 
-  AssetName: AssetName
-  displayText: Asset Name
-  DownloadType: 0
-  category: 0
+  AssetName: CGE
+  displayText: Combo Gesture Expressions
+  DownloadType: 1
+  category: 1
   directLink: 
-  gitHubLink: 
+  gitHubLink: https://github.com/hai-vr/combo-gesture-expressions-av3/releases/latest
   removeV: 0
-  linkSegments: []
+  linkSegments:
+  - ComboGestureExpressions_
+  - .unitypackage
   targetImage: {fileID: 0}
   disableScript: 
   findDisableScript: 0
