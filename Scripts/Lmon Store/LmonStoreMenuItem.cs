@@ -10,7 +10,7 @@ using UnityEditor.VersionControl;
 [CreateAssetMenu(fileName = "Item", menuName = "Lmon/New Menu Item", order = 3)]
 public class LmonStoreMenuItem : ScriptableObject
 {
-    public const string version = "v1.2.4";
+    public const string version = "v1.2.5";
     
     public string AssetName = "AssetName";
 
@@ -26,7 +26,8 @@ public class LmonStoreMenuItem : ScriptableObject
     public bool removeV = false;
     public string[] linkSegments = new string[0];
     
-    public Object targetImage;
+    public Object targetImage_dark;
+    public Object targetImage_light;
 
     public string disableScript = "";
     public bool findDisableScript = false;
@@ -69,21 +70,44 @@ public class LmonStoreMenuItemEditor : Editor
 
         Rect buttonDisplay = new Rect(40, (30 * index) + yOffset, r.width - 60, 25);
 
-        if (target.targetImage != null)
+        if (target.DownloadType == 2)
         {
-            if (target.DownloadType == 2)
-            {
-                Texture targetTexture = (Texture)target.targetImage;
+            Texture targetTexture = null;
 
+            if (target.targetImage_dark != null)
+            {
+                targetTexture = (Texture)target.targetImage_dark;
+            } else
+            {
+                targetTexture = (Texture)target.targetImage_light;
+            }
+
+            if (!EditorGUIUtility.isProSkin)
+            {
+                targetTexture = (Texture)target.targetImage_light;
+            }
+
+            if (targetTexture != null)
+            {
                 GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset, 25, 25), targetTexture);
             }
         }
-        if (target.DownloadType == 1)
+        else if (target.DownloadType == 1)
         {
             Texture targetTexture = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Lmon Store/Images/GitHub-Mark-Light-64px.png", typeof(Texture));
             if (!EditorGUIUtility.isProSkin)
             {
                 targetTexture = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Lmon Store/Images/GitHub-Mark-64px.png", typeof(Texture));
+            }
+
+            GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset, 25, 25), targetTexture);
+        }
+        else if (target.DownloadType == 0)
+        {
+            Texture targetTexture = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Lmon Store/Images/Download_icon-light.png", typeof(Texture));
+            if (!EditorGUIUtility.isProSkin)
+            {
+                targetTexture = (Texture)AssetDatabase.LoadAssetAtPath("Assets/Scripts/Lmon Store/Images/Download_icon.png", typeof(Texture));
             }
 
             GUI.DrawTexture(new Rect(10, ((30 * index)) + yOffset, 25, 25), targetTexture);
@@ -141,9 +165,22 @@ public class LmonStoreMenuItemEditor : Editor
 
         if (lmonObject.DownloadType == 2)
         {
-            lmonObject.targetImage = EditorGUILayout.ObjectField((Object)lmonObject.targetImage, typeof(Texture), false);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Darkmode Icon");
+            lmonObject.targetImage_dark = EditorGUILayout.ObjectField((Object)lmonObject.targetImage_dark, typeof(Texture), false);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Lightmode Icon");
+            lmonObject.targetImage_light = EditorGUILayout.ObjectField((Object)lmonObject.targetImage_light, typeof(Texture), false);
+            EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.HelpBox("Image Path: " + AssetDatabase.GetAssetPath(lmonObject.targetImage), MessageType.Info);
+            if (lmonObject.targetImage_dark != null)
+            {
+                EditorGUILayout.HelpBox("Image Path: " + AssetDatabase.GetAssetPath(lmonObject.targetImage_dark), MessageType.Info);
+            } else
+            {
+                EditorGUILayout.HelpBox("Image Path: " + AssetDatabase.GetAssetPath(lmonObject.targetImage_light), MessageType.Info);
+            }
         }
         else if (lmonObject.DownloadType == 1)
         {
