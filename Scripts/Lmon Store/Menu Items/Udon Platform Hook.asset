@@ -15,7 +15,7 @@ MonoBehaviour:
   AssetName: UPH
   displayText: Udon Platform Hook
   DownloadType: 1
-  category: 0
+  category: 2
   directLink: 
   gitHubLink: https://github.com/Superbstingray/UdonPlayerPlatformHook/releases/latest
   removeV: 0

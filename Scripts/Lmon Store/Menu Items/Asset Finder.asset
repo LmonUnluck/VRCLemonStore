@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 209b79c6ae7cf9841a235484d1465022, type: 3}
-  m_Name: Navmesh Light probe baker
+  m_Name: Asset Finder
   m_EditorClassIdentifier: 
-  AssetName: NMLPB
-  displayText: Nav Mesh Light Probe Baker
-  DownloadType: 0
-  category: 2
-  directLink: https://cdn.discordapp.com/attachments/735502794613588059/735502881943453717/NavmeshProbeBaker.unitypackage
+  AssetName: AssetFinder
+  displayText: AssetFinder
+  DownloadType: 2
+  category: 0
+  directLink: 
   gitHubLink: 
   removeV: 0
   linkSegments: []
-  targetImage: {fileID: 0}
+  targetImage: {fileID: 2800000, guid: 8c1d339239fc5234eaeb80c1eefff040, type: 3}
   disableScript: 
   findDisableScript: 0
