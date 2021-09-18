@@ -10,7 +10,7 @@ using UnityEditor.VersionControl;
 [CreateAssetMenu(fileName = "Item", menuName = "Lmon/New Menu Item", order = 3)]
 public class LmonStoreMenuItem : ScriptableObject
 {
-    public const string version = "v1.2.3";
+    public const string version = "v1.2.4";
     
     public string AssetName = "AssetName";
 
