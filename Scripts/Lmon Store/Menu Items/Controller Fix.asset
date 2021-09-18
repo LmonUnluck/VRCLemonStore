@@ -21,6 +21,7 @@ MonoBehaviour:
   removeV: 0
   linkSegments:
   - ControllerFix.unitypackage
-  targetImage: {fileID: 0}
+  targetImage_dark: {fileID: 0}
+  targetImage_light: {fileID: 0}
   disableScript: 
   findDisableScript: 0

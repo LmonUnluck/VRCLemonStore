@@ -20,6 +20,7 @@ MonoBehaviour:
   gitHubLink: 
   removeV: 0
   linkSegments: []
-  targetImage: {fileID: 2800000, guid: 8c1d339239fc5234eaeb80c1eefff040, type: 3}
+  targetImage_dark: {fileID: 2800000, guid: 35cc112c51467074e89b0b3582f9aabc, type: 3}
+  targetImage_light: {fileID: 2800000, guid: 8c1d339239fc5234eaeb80c1eefff040, type: 3}
   disableScript: 
   findDisableScript: 0

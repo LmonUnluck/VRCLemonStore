@@ -23,6 +23,7 @@ MonoBehaviour:
   - https://github.com/llealloo/vrc-udon-audio-link/releases/download/
   - /AudioLink_
   - .unitypackage
-  targetImage: {fileID: 2800000, guid: 234e27bc2cafdd543ab2d1c270c87fce, type: 3}
+  targetImage_dark: {fileID: 2800000, guid: ab779ba6015812d4787ed136ebfa5876, type: 3}
+  targetImage_light: {fileID: 2800000, guid: 234e27bc2cafdd543ab2d1c270c87fce, type: 3}
   disableScript: Assets/DynamicBone/Scripts/DynamicBone.cs
   findDisableScript: 1
